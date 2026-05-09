@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>社區居家運動</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  :root{
+    --teal:#1D9E75;--teal-dark:#0F6E56;--teal-light:#E1F5EE;--teal-mid:#9FE1CB;
+    --amber:#EF9F27;--amber-light:#FAEEDA;--amber-dark:#633806;
+    --red-light:#FCEBEB;--red:#A32D2D;--red-mid:#F09595;
+    --gray:#F1EFE8;--gray-dark:#444441;--gray-mid:#888780;
+    --text:#1a1a1a;--text2:#666;--text3:#999;
+    --border:#e0e0e0;--bg:#f7f7f5;--white:#fff;
+    --radius:14px;--radius-sm:10px;
+  }
+  body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;background:var(--bg);color:var(--text);font-size:16px;min-height:100vh;max-width:420px;margin:0 auto}
+  .page{display:none;min-height:100vh;flex-direction:column}
+  .page.active{display:flex}
+
+  /* ── LOGIN ── */
+  #page-login{justify-content:center;align-items:center;padding:2rem;background:var(--teal-dark)}
+  .login-box{background:var(--white);border-radius:24px;padding:2rem;width:100%;max-width:340px}
+  .login-logo{width:60px;height:60px;border-radius:18px;background:var(--teal-light);display:flex;align-items:center;justify-content:center;margin:0 auto 1.2rem}
+  .login-title{font-size:22px;font-weight:600;text-align:center;margin-bottom:6px;color:var(--text)}
+  .login-sub{font-size:14px;color:var(--text2);text-align:center;margin-bottom:1.8rem}
+  .login-label{font-size:14px;color:var(--text2);margin-bottom:6px;display:block}
+  .login-input{width:100%;padding:14px 16px;font-size:20px;border:1.5px solid var(--border);border-radius:var(--radius-sm);outline:none;transition:border 0.2s;margin-bottom:1.2rem}
+  .login-input:focus{border-color:var(--teal)}
+  .login-btn{width:100%;padding:16px;background:var(--teal);color:#fff;border:none;border-radius:var(--radius);font-size:18px;font-weight:600;cursor:pointer;transition:background 0.15s}
+  .login-btn:active{background:var(--teal-dark)}
+  .login-note{font-size:13px;color:var(--text3);text-align:center;margin-top:1rem}
+
+  /* ── COMMON LAYOUT ── */
+  .topbar{background:var(--teal-dark);padding:16px 16px 14px;flex-shrink:0}
+  .topbar-greeting{font-size:14px;color:var(--teal-mid);margin-bottom:2px}
+  .topbar-name{font-size:22px;font-weight:600;color:#fff;margin-bottom:10px}
+  .topbar-simple{display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--white);border-bottom:1px solid var(--border);flex-shrink:0}
+  .topbar-simple-title{font-size:17px;font-weight:600;color:var(--text)}
+  .topbar-simple-sub{font-size:12px;color:var(--text2)}
+  .back-btn{width:34px;height:34px;border-radius:50%;background:var(--gray);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+  .scroll-body{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:12px;-webkit-overflow-scrolling:touch}
+  .sec-label{font-size:12px;color:var(--text3);margin-bottom:6px;letter-spacing:0.04em;text-transform:uppercase}
+
+  /* ── BOTTOM NAV ── */
+  .bottom-nav{display:flex;border-top:1px solid var(--border);background:var(--white);flex-shrink:0;padding-bottom:env(safe-area-inset-bottom)}
+  .nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 4px 8px;cursor:pointer;border:none;background:none;transition:background 0.1s;border-radius:0}
+  .nav-item.active{background:var(--teal-light)}
+  .nav-icon{width:24px;height:24px}
+  .nav-label{font-size:11px;color:var(--text3)}
+  .nav-item.active .nav-label{color:var(--teal-dark);font-weight:600}
+
+  /* ── CARDS ── */
+  .card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+  .card-body{padding:14px}
+  .setting-row{display:flex;align-items:center;justify-content:space-between;padding:13px 14px;border-bottom:1px solid var(--border);gap:10px}
+  .setting-row:last-child{border-bottom:none}
+  .row-left{flex:1}
+  .row-title{font-size:15px;font-weight:500;color:var(--text);margin-bottom:2px}
+  .row-sub{font-size:12px;color:var(--text2)}
+  .lock-badge{font-size:11px;background:var(--gray);color:var(--text3);border-radius:6px;padding:3px 8px;flex-shrink:0;white-space:nowrap}
+
+  /* ── TOGGLE ── */
+  .tog{position:relative;width:44px;height:26px;border-radius:13px;background:var(--border);cursor:pointer;transition:background 0.2s;flex-shrink:0;border:none}
+  .tog.on{background:var(--teal)}
+  .tog-thumb{position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform 0.2s;pointer-events:none}
+  .tog.on .tog-thumb{transform:translateX(18px)}
+
+  /* ── STREAK / POINTS ── */
+  .badge-row{display:flex;gap:8px;flex-wrap:wrap}
+  .badge{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.18);border-radius:20px;padding:6px 14px;font-size:14px;color:#fff}
+  .badge-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+
+  /* ── HOME PAGE ── */
+  .today-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:16px}
+  .prog-bg{background:var(--gray);border-radius:8px;height:10px;overflow:hidden;margin:12px 0 6px}
+  .prog-fill{height:10px;border-radius:8px;background:var(--teal);transition:width 0.5s ease}
+  .prog-row{display:flex;justify-content:space-between;font-size:13px;color:var(--text2)}
+  .checkin-btn{width:100%;padding:17px;border-radius:var(--radius);background:var(--teal);border:none;color:#fff;font-size:20px;font-weight:600;cursor:pointer;margin-top:12px;transition:background 0.15s}
+  .checkin-btn:active{background:var(--teal-dark)}
+  .checkin-btn.done{background:var(--teal-dark)}
+  .ex-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .ex-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;cursor:pointer;transition:background 0.1s}
+  .ex-card:active{background:var(--teal-light)}
+  .ex-icon{width:38px;height:38px;border-radius:10px;margin-bottom:8px;display:flex;align-items:center;justify-content:center}
+  .ex-name{font-size:14px;font-weight:500;color:var(--text);margin-bottom:2px}
+  .ex-time{font-size:12px;color:var(--text2)}
+  .ex-done{font-size:11px;color:var(--teal-dark);background:var(--teal-light);border-radius:6px;padding:2px 7px;display:inline-block;margin-top:4px}
+  .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .stat-card{background:var(--gray);border-radius:var(--radius-sm);padding:12px}
+  .stat-val{font-size:24px;font-weight:600;color:var(--teal);margin-bottom:2px}
+  .stat-lbl{font-size:12px;color:var(--text2)}
+  .medal-row{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px}
+  .medal-row::-webkit-scrollbar{display:none}
+  .medal{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;text-align:center;flex-shrink:0;min-width:76px}
+  .medal-icon{width:30px;height:30px;border-radius:50%;margin:0 auto 4px;display:flex;align-items:center;justify-content:center}
+  .medal-name{font-size:11px;color:var(--text2)}
+  .medal.earned{border-color:var(--teal)}
+  .note-row{display:flex;align-items:flex-start;gap:8px;background:var(--teal-light);border-radius:var(--radius-sm);padding:10px 12px}
+  .note-dot{width:8px;height:8px;border-radius:50%;background:var(--teal);flex-shrink:0;margin-top:4px}
+  .note-text{font-size:13px;color:var(--teal-dark);line-height:1.5}
+
+  /* ── DEMO PAGE ── */
+  .ex-tabs{display:flex;gap:6px;padding:10px 14px 0;overflow-x:auto;flex-shrink:0;background:var(--white);border-bottom:1px solid var(--border)}
+  .ex-tabs::-webkit-scrollbar{display:none}
+  .ex-tab{flex-shrink:0;padding:8px 14px;border-radius:20px;font-size:13px;font-weight:500;cursor:pointer;border:1px solid var(--border);color:var(--text2);background:var(--white);margin-bottom:10px;transition:all 0.15s}
+  .ex-tab.active{background:var(--teal);color:#fff;border-color:var(--teal)}
+  .ex-header-card{background:var(--teal-light);border-radius:var(--radius);padding:14px}
+  .ex-header-name{font-size:18px;font-weight:600;color:var(--teal-dark);margin-bottom:4px}
+  .ex-header-meta{font-size:13px;color:var(--teal-dark)}
+  .img-slot{background:var(--gray);border:1.5px dashed var(--border);border-radius:var(--radius);height:180px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;overflow:hidden}
+  .img-slot img{width:100%;height:100%;object-fit:cover;border-radius:var(--radius)}
+  .img-slot-label{font-size:13px;color:var(--text3)}
+  .prog-dots{display:flex;gap:6px;margin-bottom:4px}
+  .prog-dot{flex:1;height:5px;border-radius:3px;background:var(--gray);transition:background 0.3s}
+  .prog-dot.done{background:var(--teal)}
+  .step-cards{display:flex;flex-direction:column;gap:8px}
+  .step-card{display:flex;align-items:flex-start;gap:10px;background:var(--white);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;cursor:pointer;transition:all 0.1s}
+  .step-card.active-step{border-color:var(--teal);background:var(--teal-light)}
+  .step-num{width:28px;height:28px;border-radius:50%;background:var(--gray);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:var(--text2);flex-shrink:0;margin-top:1px}
+  .step-card.active-step .step-num{background:var(--teal);color:#fff}
+  .step-desc{font-size:14px;color:var(--text2);line-height:1.6;margin:0}
+  .step-card.active-step .step-desc{color:var(--teal-dark)}
+  .warn-card{display:flex;gap:8px;background:var(--amber-light);border-radius:var(--radius-sm);padding:10px 12px;align-items:flex-start}
+  .warn-dot{width:8px;height:8px;border-radius:50%;background:var(--amber);flex-shrink:0;margin-top:4px}
+  .warn-text{font-size:13px;color:var(--amber-dark);line-height:1.5;margin:0}
+  .sets-row{display:flex;align-items:center;justify-content:space-between;background:var(--gray);border-radius:var(--radius-sm);padding:12px 14px}
+  .sets-label{font-size:14px;color:var(--text2)}
+  .sets-val{font-size:15px;font-weight:600;color:var(--text)}
+  .btn-row{display:flex;gap:8px}
+  .primary-btn{flex:1;padding:15px;border-radius:var(--radius);background:var(--teal);border:none;color:#fff;font-size:16px;font-weight:600;cursor:pointer;transition:all 0.15s}
+  .primary-btn:active{background:var(--teal-dark);transform:scale(0.98)}
+  .secondary-btn{flex:1;padding:15px;border-radius:var(--radius);background:var(--white);border:1px solid var(--border);color:var(--text);font-size:15px;font-weight:500;cursor:pointer;transition:all 0.15s}
+  .secondary-btn:active{background:var(--gray);transform:scale(0.98)}
+  .mark-done-btn{width:100%;padding:15px;border-radius:var(--radius);background:var(--gray);border:1px solid var(--border);color:var(--text2);font-size:15px;font-weight:500;cursor:pointer;transition:all 0.15s}
+  .mark-done-btn.completed{background:var(--teal);color:#fff;border-color:var(--teal)}
+  .mark-done-btn:active{transform:scale(0.98)}
+
+  /* ── RECORD PAGE ── */
+  .week-chart{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:14px}
+  .week-bars{display:flex;align-items:flex-end;gap:6px;height:80px;margin-bottom:8px}
+  .bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%}
+  .bar-track{flex:1;display:flex;align-items:flex-end;width:100%}
+  .bar{width:100%;border-radius:4px 4px 0 0;min-height:4px}
+  .bar.full{background:var(--teal)}
+  .bar.partial{background:var(--teal-mid)}
+  .bar.today-bar{background:var(--teal-dark)}
+  .bar.empty{background:var(--gray)}
+  .bar-day{font-size:11px;color:var(--text3);text-align:center}
+  .bar-day.today-lbl{color:var(--teal-dark);font-weight:600}
+  .chart-legend{display:flex;gap:12px;margin-top:6px;flex-wrap:wrap}
+  .legend-item{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text2)}
+  .legend-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0}
+  .cal-wrap{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:14px}
+  .cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+  .cal-month{font-size:15px;font-weight:600;color:var(--text)}
+  .cal-nav-btn{width:30px;height:30px;border-radius:50%;background:var(--gray);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+  .cal-dow{font-size:11px;color:var(--text3);text-align:center;padding:2px 0}
+  .cal-day{aspect-ratio:1;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--text2)}
+  .cal-day.done{background:var(--teal);color:#fff;font-weight:600}
+  .cal-day.partial{background:var(--teal-mid);color:var(--teal-dark)}
+  .cal-day.today-cal{border:2px solid var(--teal);color:var(--teal-dark);font-weight:600}
+  .cal-day.empty-day{color:var(--border)}
+  .history-list{display:flex;flex-direction:column;gap:8px}
+  .history-item{display:flex;align-items:center;gap:10px;background:var(--white);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px}
+  .history-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+  .history-date{font-size:14px;font-weight:500;color:var(--text);margin-bottom:2px}
+  .history-detail{font-size:12px;color:var(--text2)}
+  .history-badge{font-size:11px;padding:3px 8px;border-radius:8px;flex-shrink:0;white-space:nowrap}
+  .badge-full{background:var(--teal-light);color:var(--teal-dark)}
+  .badge-partial{background:var(--amber-light);color:var(--amber-dark)}
+
+  /* ── SETTINGS PAGE ── */
+  .profile-card{display:flex;align-items:center;gap:12px;background:var(--gray);border-radius:var(--radius);padding:14px}
+  .avatar{width:50px;height:50px;border-radius:50%;background:var(--teal);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:600;color:#fff;flex-shrink:0}
+  .font-btns{display:flex;gap:4px}
+  .font-btn{padding:5px 9px;border-radius:8px;border:1px solid var(--border);font-size:12px;color:var(--text2);background:var(--white);cursor:pointer;transition:all 0.15s}
+  .font-btn.active{background:var(--teal);color:#fff;border-color:var(--teal)}
+  .nurse-card{background:var(--teal-light);border-radius:var(--radius);padding:14px;display:flex;align-items:center;gap:12px}
+  .nurse-avatar{width:42px;height:42px;border-radius:50%;background:var(--teal);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:600;color:#fff;flex-shrink:0}
+  .call-btn{margin-left:auto;width:38px;height:38px;border-radius:50%;background:var(--teal);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+  .frail-badge{display:inline-flex;align-items:center;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:500;background:var(--amber-light);color:var(--amber-dark)}
+
+  /* ── SOS ── */
+  .sos-btn{width:100%;padding:15px;border-radius:var(--radius);background:var(--gray);border:1px solid var(--border);color:var(--text);font-size:16px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:10px;transition:all 0.15s;text-align:left}
+  .sos-btn:active{transform:scale(0.98)}
+  .sos-icon{width:38px;height:38px;border-radius:10px;background:var(--amber-light);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .msg-box{display:none;flex-direction:column;gap:10px;background:var(--gray);border-radius:var(--radius);padding:14px}
+  .msg-box.show{display:flex}
+  .msg-bubble{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;font-size:14px;color:var(--text);line-height:1.8}
+  .msg-bubble b{color:var(--teal-dark)}
+  .copy-btn{width:100%;padding:13px;border-radius:var(--radius-sm);background:var(--teal);border:none;color:#fff;font-size:15px;font-weight:600;cursor:pointer;transition:all 0.15s}
+  .copy-btn.copied{background:var(--teal-dark)}
+  .copy-btn:active{transform:scale(0.97)}
+  .step-hint{font-size:13px;color:var(--text2);line-height:1.6}
+
+  /* ── TOAST ── */
+  #toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:var(--teal-dark);color:#fff;padding:10px 20px;border-radius:20px;font-size:14px;white-space:nowrap;opacity:0;transition:opacity 0.3s;pointer-events:none;z-index:999}
+  #toast.show{opacity:1}
+</style>
+</head>
+<body>
+
+<!-- ══ LOGIN ══ -->
+<div id="page-login" class="page active">
+  <div class="login-box">
+    <div class="login-logo">
+      <svg width="32" height="32" viewBox="0 0 32 32" fill="none" stroke="#1D9E75" stroke-width="2" stroke-linecap="round">
+        <circle cx="16" cy="10" r="5"/><path d="M6 28c0-5.5 4.5-10 10-10s10 4.5 10 10"/>
+      </svg>
+    </div>
+    <p class="login-title">社區居家運動</p>
+    <p class="login-sub">請輸入您的姓名開始使用</p>
+    <label class="login-label">您的姓名</label>
+    <input class="login-input" id="name-input" type="text" placeholder="例如：王美華" maxlength="10">
+    <button class="login-btn" onclick="doLogin()">進入</button>
+    <p class="login-note">輸入姓名即可使用，無需密碼</p>
+  </div>
+</div>
+
+<!-- ══ HOME ══ -->
+<div id="page-home" class="page">
+  <div class="topbar">
+    <p class="topbar-greeting">早安，</p>
+    <p class="topbar-name" id="home-name">王阿嬤 您好</p>
+    <div class="badge-row">
+      <div class="badge">
+        <div class="badge-dot" style="background:#EF9F27"></div>
+        連續 <span id="streak-num">7</span> 天
+      </div>
+      <div class="badge">
+        <div class="badge-dot" style="background:#FAC775"></div>
+        <span id="pts-num">320</span> 點
+      </div>
+    </div>
+  </div>
+  <div class="scroll-body">
+    <div class="today-card">
+      <p class="sec-label">今日運動計畫</p>
+      <p style="font-size:18px;font-weight:600;margin-bottom:4px">下肢與上肢訓練</p>
+      <p style="font-size:13px;color:var(--text2);margin-bottom:0">共 3 項運動・每日三組每組十次</p>
+      <div class="prog-bg"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+      <div class="prog-row">
+        <span id="prog-text">完成 0 / 3 項</span>
+        <span id="prog-pct">0%</span>
+      </div>
+      <button class="checkin-btn" id="checkin-btn" onclick="doCheckin()">立刻開始運動</button>
+    </div>
+    <div>
+      <p class="sec-label">今日運動清單</p>
+      <div class="ex-grid">
+        <div class="ex-card" onclick="goDemo(0)">
+          <div class="ex-icon" style="background:var(--teal-light)">
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="#0F6E56" stroke-width="1.5" stroke-linecap="round"><path d="M4 14h14M7 14V8l4-4 4 4v6"/><circle cx="11" cy="18" r="1"/></svg>
+          </div>
+          <p class="ex-name">壺鈴高腳杯深蹲</p>
+          <p class="ex-time">3組×10次</p>
+          <span class="ex-done" id="done-0" style="display:none">已完成</span>
+        </div>
+        <div class="ex-card" onclick="goDemo(1)">
+          <div class="ex-icon" style="background:var(--amber-light)">
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="#854F0B" stroke-width="1.5" stroke-linecap="round"><circle cx="11" cy="5" r="2"/><path d="M11 7v7M8 10h6M11 14l-2 5M11 14l2 5"/></svg>
+          </div>
+          <p class="ex-name">壺鈴交替握</p>
+          <p class="ex-time">3組×10次</p>
+          <span class="ex-done" id="done-1" style="display:none">已完成</span>
+        </div>
+        <div class="ex-card" onclick="goDemo(2)">
+          <div class="ex-icon" style="background:#EEEDFE">
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="#534AB7" stroke-width="1.5" stroke-linecap="round"><path d="M11 4v10M7 6l4-2 4 2M7 18h8"/><path d="M7 14l4 4 4-4"/></svg>
+          </div>
+          <p class="ex-name">彈力帶肩推</p>
+          <p class="ex-time">3組×10次</p>
+          <span class="ex-done" id="done-2" style="display:none">已完成</span>
+        </div>
+        <div class="ex-card" onclick="showToast('護理師陳小姐本週將於週三電訪')">
+          <div class="ex-icon" style="background:#E6F1FB">
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="#185FA5" stroke-width="1.5" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M11 8v3l2 2"/></svg>
+          </div>
+          <p class="ex-name">護理師訊息</p>
+          <p class="ex-time" style="color:var(--teal-dark)">陳護理師</p>
+        </div>
+      </div>
+    </div>
+    <div>
+      <p class="sec-label">本月成就</p>
+      <div class="stat-grid">
+        <div class="stat-card"><p class="stat-val">18</p><p class="stat-lbl">完成天數</p></div>
+        <div class="stat-card"><p class="stat-val">7</p><p class="stat-lbl">連續天數</p></div>
+        <div class="stat-card"><p class="stat-val">54</p><p class="stat-lbl">完成組數</p></div>
+        <div class="stat-card"><p class="stat-val">320</p><p class="stat-lbl">累積點數</p></div>
+      </div>
+    </div>
+    <div>
+      <p class="sec-label">我的勳章</p>
+      <div class="medal-row">
+        <div class="medal earned">
+          <div class="medal-icon" style="background:var(--teal-light)">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#0F6E56" stroke-width="1.5" stroke-linecap="round"><path d="M8 2l1.5 3 3.5.5-2.5 2.5.5 3.5L8 10l-3 1.5.5-3.5L3 5.5l3.5-.5z"/></svg>
+          </div>
+          <p class="medal-name">7天達人</p>
+        </div>
+        <div class="medal earned">
+          <div class="medal-icon" style="background:var(--amber-light)">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#854F0B" stroke-width="1.5" stroke-linecap="round"><circle cx="8" cy="8" r="5"/><path d="M8 5v3l2 2"/></svg>
+          </div>
+          <p class="medal-name">準時運動</p>
+        </div>
+        <div class="medal earned">
+          <div class="medal-icon" style="background:var(--teal-light)">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#0F6E56" stroke-width="1.5" stroke-linecap="round"><path d="M3 8l4 4 6-6"/></svg>
+          </div>
+          <p class="medal-name">完整完成</p>
+        </div>
+        <div class="medal" style="opacity:0.4">
+          <div class="medal-icon" style="background:var(--gray)">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#888" stroke-width="1.5" stroke-linecap="round"><path d="M8 2v12M2 8h12"/></svg>
+          </div>
+          <p class="medal-name">30天勳章</p>
+        </div>
+      </div>
+    </div>
+    <div class="note-row">
+      <div class="note-dot"></div>
+      <p class="note-text">護理師陳小姐本週將於週三電訪關心您的運動狀況</p>
+    </div>
+    <div style="height:8px"></div>
+  </div>
+  <div class="bottom-nav">
+    <button class="nav-item active" onclick="goPage('home')">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="#0F6E56" stroke-width="1.5" stroke-linecap="round"><path d="M3 12l9-9 9 9"/><path d="M5 10v9h5v-5h4v5h5v-9"/></svg>
+      <span class="nav-label">首頁</span>
+    </button>
+    <button class="nav-item" onclick="goPage('demo')">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M10 8l6 4-6 4V8z"/></svg>
+      <span class="nav-label">示範</span>
+    </button>
+    <button class="nav-item" onclick="goPage('record')">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="1.5" stroke-linecap="round"><path d="M3 20h18M5 20V12M9 20V8M13 20V14M17 20V4"/></svg>
+      <span class="nav-label">紀錄</span>
+    </button>
+    <button class="nav-item" onclick="goPage('settings')">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+      <span class="nav-label">我的</span>
+    </button>
+  </div>
+</div>
+
+<!-- ══ DEMO ══ -->
+<div id="page-demo" class="page">
+  <div class="topbar-simple">
+    <button class="back-btn" onclick="goPage('home')">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#444" stroke-width="1.5" stroke-linecap="round"><path d="M10 3L5 8l5 5"/></svg>
+    </button>
+    <div>
+      <div class="topbar-simple-title">今日運動示範</div>
+      <div class="topbar-simple-sub">每日三組・每組十次</div>
+    </div>
+  </div>
+  <div class="ex-tabs" id="demo-tabs"></div>
+  <div class="scroll-body" id="demo-body"></div>
+  <div class="bottom-nav">
+    <button class="nav-item" onclick="goPage('home')">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="1.5" stroke-linecap="round"><path d="M3 12l9-9 9 9"/><path d="M5 10v9h5v-5h4v5h5v-9"/></svg>
+      <span class="nav-label">首頁</span>
+    </button>
+    <button class="nav-item active" onclick="goPage('demo')">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="#0F6E56" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M10 8l6 4-6 4V8z"/></svg>
+      <span class="nav-label">示範</span>
+    </button>
+    <button class="nav-item" onclick="goPage('record')">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="1.5" stroke-linecap="round"><path d="M3 20h18M5 20V12M9 20V8M13 20V14M17 20V4"/></svg>
+      <span class="nav-label">紀錄</span>
+    </button>
+    <button class="nav-item" onclick="goPage('settings')">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+      <span class="nav-label">我的</span>
+    </button>
+  </div>
+</div>
+
+<!-- ══ RECORD ══ -->
+<div id="page-record" class="page">
+  <div class="topbar-simple">
+    <div>
+      <div class="topbar-simple-title">運動紀錄</div>
+      <div class="topbar-simple-sub">4月・2025</div>
+    </div>
+  </div>
+  <div class="scroll-body">
+    <div>
+      <p class="sec-label">本月總覽</p>
+      <div class="stat-grid">
+        <div class="stat-card"><p class="stat-val">18</p><p class="stat-lbl">完成天數</p></div>
+        <div class="stat-card"><p class="stat-val">7</p><p class="stat-lbl">連續天數</p></div>
+        <div class="stat-card"><p class="stat-val">54</p><p class="stat-lbl">完成組數</p></div>
+        <div class="stat-card"><p class="stat-val">320</p><p class="stat-lbl">累積點數</p></div>
+      </div>
+    </div>
+    <div class="week-chart">
+      <p class="sec-label" style="margin-bottom:10px">本週完成率</p>
+      <div class="week-bars" id="week-bars"></div>
+      <div class="chart-legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#0F6E56"></div>今天</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#1D9E75"></div>全部完成</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#9FE1CB"></div>部分完成</div>
+      </div>
+    </div>
+    <div class="cal-wrap">
+      <div class="cal-header">
+        <button class="cal-nav-btn">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="#444" stroke-width="1.5" stroke-linecap="round"><path d="M9 3L5 7l4 4"/></svg>
+        </button>
+        <span class="cal-month">2025 年 4 月</span>
+        <button class="cal-nav-btn">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="#444" stroke-width="1.5" stroke-linecap="round"><path d="M5 3l4 4-4 4"/></svg>
+        </button>
+      </div>
+      <div class="cal-grid" id="cal-grid"></div>
+    </div>
+    <div>
+      <p class="sec-label">最近紀錄</p>
+      <div class="history-list" id="history-list"></div>
+    </div>
+    <div style="height:8px"></div>
+  </div>
+  <div class="bottom-nav">
+    <button class="nav-item" onclick="goPage('home')">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="1.5" stroke-linecap="round"><path d="M3 12l9-9 9 9"/><path d="M5 10v9h5v-5h4v5h5v-9"/></svg>
+      <span class="nav-label">首頁</span>
+    </button>
+    <button class="nav-item" onclick="goPage('demo')">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M10 8l6 4-6 4V8z"/></svg>
+      <span class="nav-label">示範</span>
+    </button>
+    <button class="nav-item active" onclick="goPage('record')">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="#0F6E56" stroke-width="1.5" stroke-linecap="round"><path d="M3 20h18M5 20V12M9 20V8M13 20V14M17 20V4"/></svg>
+      <span class="nav-label">紀錄</span>
+    </button>
+    <button class="nav-item" onclick="goPage('settings')">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+      <span class="nav-label">我的</span>
+    </button>
+  </div>
+</div>
+
+<!-- ══ SETTINGS ══ -->
+<div id="page-settings" class="page">
+  <div class="topbar-simple">
+    <div>
+      <div class="topbar-simple-title">我的設定</div>
+      <div class="topbar-simple-sub">個人偏好與護理師資訊</div>
+    </div>
+  </div>
+  <div class="scroll-body">
+    <div class="profile-card">
+      <div class="avatar" id="settings-avatar">王</div>
+      <div>
+        <p style="font-size:17px;font-weight:600;margin-bottom:3px" id="settings-name">王美華</p>
+        <p style="font-size:12px;color:var(--text2)">加入第 42 天・累積 320 點</p>
+      </div>
+    </div>
+    <div>
+      <p class="sec-label">顯示與聲音</p>
+      <div class="card">
+        <div class="setting-row">
+          <div class="row-left"><p class="row-title">字體大小</p></div>
+          <div class="font-btns">
+            <button class="font-btn" onclick="setFont(this,'小',14)">小</button>
+            <button class="font-btn" onclick="setFont(this,'中',16)">中</button>
+            <button class="font-btn active" onclick="setFont(this,'大',19)">大</button>
+            <button class="font-btn" onclick="setFont(this,'超大',22)">超</button>
+          </div>
+        </div>
+        <div class="setting-row">
+          <div class="row-left"><p class="row-title">語音導引</p><p class="row-sub">示範時播放語音</p></div>
+          <button class="tog on" id="tog-voice" onclick="toggleTog('tog-voice','語音導引')"><div class="tog-thumb"></div></button>
+        </div>
+        <div class="setting-row">
+          <div class="row-left"><p class="row-title">聲音提示</p><p class="row-sub">完成動作時音效</p></div>
+          <button class="tog on" id="tog-sound" onclick="toggleTog('tog-sound','聲音提示')"><div class="tog-thumb"></div></button>
+        </div>
+      </div>
+    </div>
+    <div>
+      <p class="sec-label">運動提醒</p>
+      <div class="card">
+        <div class="setting-row">
+          <div class="row-left"><p class="row-title">每日提醒</p></div>
+          <button class="tog on" id="tog-remind" onclick="toggleTog('tog-remind','每日提醒')"><div class="tog-thumb"></div></button>
+        </div>
+        <div class="setting-row">
+          <div class="row-left"><p class="row-title">提醒時間</p></div>
+          <span style="font-size:14px;font-weight:600;color:var(--teal)">上午 09:00</span>
+        </div>
+      </div>
+    </div>
+    <div>
+      <p class="sec-label">運動計畫（護理師設定）</p>
+      <div class="card">
+        <div class="setting-row">
+          <div class="row-left"><p class="row-title">健康分級</p></div>
+          <span class="frail-badge">衰弱前期</span>
+          <span class="lock-badge">護理師設定</span>
+        </div>
+        <div class="setting-row">
+          <div class="row-left"><p class="row-title">運動項目</p><p class="row-sub">壺鈴深蹲・交替握・彈力帶肩推</p></div>
+          <span class="lock-badge">護理師設定</span>
+        </div>
+        <div class="setting-row">
+          <div class="row-left"><p class="row-title">每日目標</p><p class="row-sub">每項 3 組・每組 10 次</p></div>
+          <span class="lock-badge">護理師設定</span>
+        </div>
+      </div>
+    </div>
+    <div>
+      <p class="sec-label">我的護理師</p>
+      <div class="nurse-card">
+        <div class="nurse-avatar">陳</div>
+        <div>
+          <p style="font-size:14px;font-weight:600;color:var(--teal-dark);margin-bottom:2px">陳小姐 護理師</p>
+          <p style="font-size:12px;color:var(--teal-dark)">本週電訪：週三上午</p>
+        </div>
+        <button class="call-btn" onclick="showToast('撥打護理師電話（上線後可連結通話）')">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round"><path d="M3 3h3l1.5 3.5-2 1.5c1 2 2.5 3.5 4.5 4.5l1.5-2L15 12v3a1 1 0 01-1 1C6 16 2 10 2 4a1 1 0 011-1z"/></svg>
+        </button>
+      </div>
+    </div>
+    <div>
+      <p class="sec-label">LINE 群組求助</p>
+      <div style="background:var(--teal-light);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:10px;display:flex;align-items:flex-start;gap:8px">
+        <div style="width:8px;height:8px;border-radius:50%;background:var(--teal);flex-shrink:0;margin-top:4px"></div>
+        <p style="font-size:13px;color:var(--teal-dark);line-height:1.6;margin:0">運動後有任何不適，可產生訊息後貼到社區 LINE 群組，護理師會回覆您</p>
+      </div>
+      <button class="sos-btn" onclick="showSOS()">
+        <div class="sos-icon">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#854F0B" stroke-width="1.5" stroke-linecap="round"><path d="M10 4v6M10 13v.5"/><circle cx="10" cy="10" r="7"/></svg>
+        </div>
+        <div style="flex:1">
+          <p style="font-size:15px;font-weight:500;margin-bottom:2px">肌肉痠痛</p>
+          <p style="font-size:12px;color:var(--text2)">點此產生求助訊息</p>
+        </div>
+        <svg style="opacity:0.4" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#444" stroke-width="1.5" stroke-linecap="round"><path d="M6 3l5 5-5 5"/></svg>
+      </button>
+      <div class="msg-box" id="msg-box" style="margin-top:10px">
+        <p style="font-size:12px;color:var(--text3)">您的求助訊息（複製後貼到 LINE 群組）</p>
+        <div class="msg-bubble" id="msg-content"></div>
+        <button class="copy-btn" id="copy-btn" onclick="copyMsg()">複製訊息</button>
+        <p class="step-hint"><b>步驟：</b>開啟 LINE → 進入社區運動群組 → 貼上訊息並傳送</p>
+      </div>
+    </div>
+    <div style="height:8px"></div>
+  </div>
+  <div class="bottom-nav">
+    <button class="nav-item" onclick="goPage('home')">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="1.5" stroke-linecap="round"><path d="M3 12l9-9 9 9"/><path d="M5 10v9h5v-5h4v5h5v-9"/></svg>
+      <span class="nav-label">首頁</span>
+    </button>
+    <button class="nav-item" onclick="goPage('demo')">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M10 8l6 4-6 4V8z"/></svg>
+      <span class="nav-label">示範</span>
+    </button>
+    <button class="nav-item" onclick="goPage('record')">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="1.5" stroke-linecap="round"><path d="M3 20h18M5 20V12M9 20V8M13 20V14M17 20V4"/></svg>
+      <span class="nav-label">紀錄</span>
+    </button>
+    <button class="nav-item active" onclick="goPage('settings')">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="#0F6E56" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+      <span class="nav-label">我的</span>
+    </button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+/* ── DATA ── */
+const exercises = [
+  {
+    name:"壺鈴高腳杯深蹲",
+    sets:"3 組 × 10 次",
+    img:"images/深蹲.jpg",
+    warning:"膝蓋不適或下背疼痛時請立即停止，並告知護理師",
+    steps:[
+      "雙腳略寬於臀部，雙手倒持壺鈴放在胸前",
+      "保持身體挺直，核心收緊",
+      "下蹲時將臀部向後推，上半身可稍微向前傾，但核心要持續出力",
+      "深蹲至屁股輕碰椅面，向上抬起時利用腳跟發力，同時收緊臀部"
+    ]
+  },
+  {
+    name:"壺鈴交替握",
+    sets:"3 組 × 10 次",
+    img:"images/交替握.jpg",
+    warning:"注意壺鈴不要掉落，周圍保持淨空，地面防滑",
+    steps:[
+      "雙腳略寬於臀部，單手握住壺鈴把手",
+      "一手放開後，另一手迅速接住壺鈴把手",
+      "交替進行，訓練反應與握力"
+    ]
+  },
+  {
+    name:"彈力帶肩推",
+    sets:"3 組 × 10 次",
+    img:"images/肩推.jpg",
+    warning:"全程不可聳肩，若肩部不適請立即停止",
+    steps:[
+      "將彈力帶穿過臀部下方，雙手各持一端",
+      "利用肩部力量向上推，全程保持核心穩定，注意不能聳肩",
+      "雙手推到最高點後停留 1 秒，再慢慢收回",
+      "重複動作"
+    ]
+  }
+];
+
+const weekData=[
+  {day:'一',pct:100,type:'full'},{day:'二',pct:100,type:'full'},
+  {day:'三',pct:67,type:'partial'},{day:'四',pct:100,type:'full'},
+  {day:'五',pct:100,type:'full'},{day:'六',pct:100,type:'full'},
+  {day:'日',pct:33,type:'today'}
+];
+const doneDays=[1,2,3,5,6,7,8,9,10,12,13,14,15,16,17,18,19];
+const partialDays=[4,11];
+const history=[
+  {date:'4月19日（今天）',detail:'壺鈴高腳杯深蹲 完成・其餘進行中',type:'partial'},
+  {date:'4月18日（昨天）',detail:'全部 3 項完成・獲得 30 點',type:'full'},
+  {date:'4月17日',detail:'全部 3 項完成・獲得 30 點',type:'full'},
+  {date:'4月16日',detail:'全部 3 項完成・獲得 30 點',type:'full'},
+  {date:'4月15日',detail:'全部 3 項完成・獲得 30 點',type:'full'},
+];
+
+/* ── STATE ── */
+let userName='';
+let checkinCount=0;
+let pts=320;
+let streak=7;
+let curEx=0;
+let curStep=0;
+let exCompleted=[false,false,false];
+
+/* ── LOGIN ── */
+function doLogin(){
+  const n=document.getElementById('name-input').value.trim();
+  if(!n){showToast('請輸入您的姓名');return;}
+  userName=n;
+  localStorage.setItem('userName',n);
+  document.getElementById('home-name').textContent=n+' 您好';
+  const av=n.charAt(0);
+  document.getElementById('settings-avatar').textContent=av;
+  document.getElementById('settings-name').textContent=n;
+  goPage('home');
+}
+document.getElementById('name-input').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+
+/* ── PAGE NAV ── */
+function goPage(p){
+  document.querySelectorAll('.page').forEach(el=>el.classList.remove('active'));
+  document.getElementById('page-'+p).classList.add('active');
+  if(p==='demo'){renderDemoTabs();renderDemoBody();}
+  if(p==='record'){renderWeek();renderCal();renderHistory();}
+  window.scrollTo(0,0);
+}
+function goDemo(i){curEx=i;curStep=0;goPage('demo');}
+
+/* ── HOME ── */
+function doCheckin(){
+  if(checkinCount>=3)return;
+  checkinCount++;
+  exCompleted[checkinCount-1]=true;
+  document.getElementById('done-'+(checkinCount-1)).style.display='inline-block';
+  const pct=Math.round((checkinCount/3)*100);
+  document.getElementById('prog-fill').style.width=pct+'%';
+  document.getElementById('prog-text').textContent='完成 '+checkinCount+' / 3 項';
+  document.getElementById('prog-pct').textContent=pct+'%';
+  pts+=30;
+  document.getElementById('pts-num').textContent=pts;
+  const btn=document.getElementById('checkin-btn');
+  if(checkinCount>=3){
+    btn.textContent='今日全部完成！';
+    btn.classList.add('done');
+    streak++;
+    document.getElementById('streak-num').textContent=streak;
+    showToast('太棒了！今天全部完成，獲得 30 點');
+  } else {
+    showToast('完成第 '+checkinCount+' 項！再獲得 30 點');
+  }
+}
+
+/* ── DEMO ── */
+function renderDemoTabs(){
+  document.getElementById('demo-tabs').innerHTML=exercises.map((e,i)=>
+    `<div class="ex-tab${i===curEx?' active':''}" onclick="switchEx(${i})">${i+1}. ${e.name.length>7?e.name.slice(0,7)+'…':e.name}</div>`
+  ).join('');
+}
+function renderDemoBody(){
+  const ex=exercises[curEx];
+  const stepsHtml=ex.steps.map((s,i)=>
+    `<div class="step-card${i===curStep?' active-step':''}" onclick="setStep(${i})">
+      <div class="step-num">${i+1}</div>
+      <p class="step-desc">${s}</p>
+    </div>`
+  ).join('');
+  const dotsHtml=ex.steps.map((_,i)=>
+    `<div class="prog-dot${i<=curStep?' done':''}"></div>`
+  ).join('');
+  const doneClass=exCompleted[curEx]?' completed':'';
+  const doneText=exCompleted[curEx]?'本項已完成 ✓':'標記本項完成';
+  document.getElementById('demo-body').innerHTML=`
+    <div class="ex-header-card">
+      <p class="ex-header-name">${ex.name}</p>
+      <p class="ex-header-meta">${ex.sets}</p>
+    </div>
+    <div class="img-slot" id="img-slot">
+      <img src="${ex.img}" alt="${ex.name}示範圖" onerror="this.parentElement.innerHTML='<svg width=40 height=40 viewBox=&quot;0 0 40 40&quot; fill=none stroke=&quot;#ccc&quot; stroke-width=1.5 stroke-linecap=round><rect x=4 y=6 width=32 height=28 rx=5/><circle cx=15 cy=16 r=4/><path d=&quot;M4 34l10-10 7 7 4-4 11 11&quot;/></svg><p class=img-slot-label>示範圖片（待上傳）</p>'">
+    </div>
+    <div class="prog-dots">${dotsHtml}</div>
+    <div class="steps-wrap">
+      <p class="sec-label">步驟說明</p>
+      ${stepsHtml}
+    </div>
+    <div class="warn-card">
+      <div class="warn-dot"></div>
+      <p class="warn-text">${ex.warning}</p>
+    </div>
+    <div class="sets-row">
+      <span class="sets-label">今日目標</span>
+      <span class="sets-val">${ex.sets}</span>
+    </div>
+    <div class="btn-row">
+      <button class="primary-btn" onclick="nextStep()">下一步</button>
+      <button class="secondary-btn" onclick="switchEx(${(curEx+1)%exercises.length})">換項目</button>
+    </div>
+    <button class="mark-done-btn${doneClass}" onclick="markDone()">${doneText}</button>
+    <div style="height:8px"></div>
+  `;
+}
+function switchEx(i){curEx=i;curStep=0;renderDemoTabs();renderDemoBody();}
+function setStep(i){curStep=i;renderDemoBody();}
+function nextStep(){
+  curStep=curStep<exercises[curEx].steps.length-1?curStep+1:0;
+  renderDemoBody();
+}
+function markDone(){exCompleted[curEx]=true;renderDemoBody();showToast('已標記完成！');}
+
+/* ── RECORD ── */
+function renderWeek(){
+  document.getElementById('week-bars').innerHTML=weekData.map(d=>{
+    const h=Math.round((d.pct/100)*68);
+    const cls=d.type==='today'?'today-bar':d.type==='partial'?'partial':'full';
+    const lbl=d.type==='today'?'today-lbl':'';
+    return `<div class="bar-wrap"><div class="bar-track"><div class="bar ${cls}" style="height:${h}px"></div></div><div class="bar-day ${lbl}">${d.day}</div></div>`;
+  }).join('');
+}
+function renderCal(){
+  const dows=['日','一','二','三','四','五','六'];
+  let html=dows.map(d=>`<div class="cal-dow">${d}</div>`).join('');
+  for(let i=0;i<2;i++) html+=`<div class="cal-day empty-day"></div>`;
+  for(let d=1;d<=30;d++){
+    let cls='cal-day';
+    if(d===19) cls+=' today-cal';
+    else if(doneDays.includes(d)) cls+=' done';
+    else if(partialDays.includes(d)) cls+=' partial';
+    html+=`<div class="${cls}">${d}</div>`;
+  }
+  document.getElementById('cal-grid').innerHTML=html;
+}
+function renderHistory(){
+  document.getElementById('history-list').innerHTML=history.map(h=>
+    `<div class="history-item">
+      <div class="history-dot" style="background:${h.type==='full'?'var(--teal)':'var(--teal-mid)'}"></div>
+      <div style="flex:1">
+        <p class="history-date">${h.date}</p>
+        <p class="history-detail">${h.detail}</p>
+      </div>
+      <span class="history-badge ${h.type==='full'?'badge-full':'badge-partial'}">${h.type==='full'?'全完成':'部分'}</span>
+    </div>`
+  ).join('');
+}
+
+/* ── SETTINGS ── */
+function toggleTog(id,name){
+  const el=document.getElementById(id);
+  el.classList.toggle('on');
+  showToast(name+(el.classList.contains('on')?'已開啟':'已關閉'));
+}
+function setFont(btn,name,size){
+  document.querySelectorAll('.font-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.body.style.fontSize=size+'px';
+  showToast('字體大小已設為：'+name);
+}
+function showSOS(){
+  const box=document.getElementById('msg-box');
+  box.classList.add('show');
+  const now=new Date();
+  const h=now.getHours(),m=String(now.getMinutes()).padStart(2,'0');
+  const ampm=h<12?'上午':'下午';
+  const hh=h%12||12;
+  const timeStr=ampm+' '+hh+':'+m;
+  document.getElementById('msg-content').innerHTML=
+    `您好，我是 <b>${userName||'長者'}</b>，<br>今天做完運動後感覺 <b>肌肉痠痛</b>。<br>完成項目：壺鈴高腳杯深蹲、彈力帶肩推<br>時間：<b>${timeStr}</b><br>請問護理師這樣正常嗎？謝謝`;
+  box.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+function copyMsg(){
+  const n=userName||'長者';
+  const now=new Date();
+  const h=now.getHours(),m=String(now.getMinutes()).padStart(2,'0');
+  const ampm=h<12?'上午':'下午';
+  const hh=h%12||12;
+  const text=`您好，我是${n}，\n今天做完運動後感覺肌肉痠痛。\n完成項目：壺鈴高腳杯深蹲、彈力帶肩推\n時間：${ampm} ${hh}:${m}\n請問護理師這樣正常嗎？謝謝`;
+  const btn=document.getElementById('copy-btn');
+  if(navigator.clipboard){
+    navigator.clipboard.writeText(text).then(()=>{btn.textContent='已複製！請貼到 LINE 群組';btn.classList.add('copied');setTimeout(()=>{btn.textContent='複製訊息';btn.classList.remove('copied');},3000);});
+  } else {
+    const ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);
+    btn.textContent='已複製！請貼到 LINE 群組';btn.classList.add('copied');
+    setTimeout(()=>{btn.textContent='複製訊息';btn.classList.remove('copied');},3000);
+  }
+}
+
+/* ── TOAST ── */
+let toastTimer=null;
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+/* ── INIT ── */
+const saved=localStorage.getItem('userName');
+if(saved){
+  userName=saved;
+  document.getElementById('home-name').textContent=saved+' 您好';
+  document.getElementById('settings-avatar').textContent=saved.charAt(0);
+  document.getElementById('settings-name').textContent=saved;
+  goPage('home');
+}
+</script>
+</body>
+</html>
